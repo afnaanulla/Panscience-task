@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: task-management-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: task_management
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - task-management-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb://localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: task-management-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/task_management?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - JWT_EXPIRE=7d
+      - CLIENT_URL=http://localhost:3000
+      - STORAGE_TYPE=local
+      - UPLOADS_PATH=./uploads
+    volumes:
+      - backend_uploads:/app/uploads
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - task-management-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: task-management-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+      - GENERATE_SOURCEMAP=false
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - task-management-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
+  backend_uploads:
+    driver: local
+
+networks:
+  task-management-network:
+    driver: bridge
