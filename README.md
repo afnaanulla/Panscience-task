@@ -487,15 +487,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Time tracking functionality
 - [ ] Task dependencies
 
-## 📞 Support
-
-For support, email support@taskmanagement.com or create an issue in the repository.
-
-## 🙏 Acknowledgments
-
-- React team for the amazing framework
-- Express.js community for the robust backend framework
-- MongoDB for the flexible NoSQL database
-- Mongoose team for the elegant MongoDB modeling
-- Docker community for containerization excellence
-- All open-source contributors whose packages made this project possible
