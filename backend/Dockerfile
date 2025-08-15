@@ -3,16 +3,16 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files first
+COPY package.json package-lock.json ./
 
-# Install dependencies
+# Install production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
 # Create uploads directory
 RUN mkdir -p uploads/tasks
 
-# Copy source code
+# Copy rest of the source code
 COPY . .
 
 # Create non-root user
